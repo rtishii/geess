@@ -1,0 +1,34 @@
+#' epilepsy dataset
+#'
+#' The data studied the effect of air pollution on the health of 16 children.
+#' The outcome variable was the wheezing status measured consistently four
+#' times yearly at ages of 9, 10, 11, and 12 years.
+#'
+#' @name epilepsy
+#'
+#' @docType data
+#'
+#' @format A data frame with 64 observations on the following 6 variables:
+#'   \describe{
+#'     \item{\code{Drug}}{aa.}
+#'     \item{\code{ID}}{aa.}
+#'     \item{\code{Age}}{aa.}
+#'     \item{\code{Base}}{aa.}
+#'     \item{\code{Time}}{aa.}
+#'     \item{\code{Count}}{binary indicator of whether the child lives in
+#'                        Kingston (0 = Portage; 1 = Kingston).}
+#'   }
+#'
+#' @examples data(epilepsy)
+#'
+#' @references \itemize{
+#'   \item Hardin, J. and Hilbe, J. (2013).
+#'         \emph{Generalized Estimating Equations, 2nd edition}.
+#'         Chapman and Hall, London.\cr
+#'   \item Lipsitz, S. R., Fitzmaurice, G. M., Orav, E. J., and Laird, N. M.
+#'         (1994). Performance of Generalized Estimating Equations in Practical
+#'         Situations.
+#'         \emph{Biometrics}, 50, 270–278,
+#'         \doi{10.2307/2533218}.
+#'   }
+NULL

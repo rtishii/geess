@@ -1,6 +1,6 @@
 #' Modified Generalized Estimating Equations for Small-sample data
 #'
-#' \code{geess} is an extension of \code{geessbin} package.
+#' \code{geess} is an extension of \code{geessbin} package (Ishii et al., 2024).
 #' \code{geess} analyzes small-sample clustered or longitudinal data using
 #' modified generalized estimating equations (GEE) with bias-adjusted covariance
 #' estimator. This function provides any combination of three GEE methods
@@ -36,17 +36,17 @@
 #' \item "FZ" is the Fan et al. estimator (Fan et al., 2013)
 #' }
 #'
-#' Descriptions and performances of some of the above methods can be found in
-#' Gosho et al. (2023).
+#' Descriptions and performances of some of the above methods in the case of
+#' binary outcomes can be found in Gosho et al. (2023).
 #'
 #' @param formula Object of class formula: symbolic description of model to be
 #'        fitted (see documentation of \code{lm} and
 #'        \code{formula} for details).
 #' @param family Description of the error distribution and link function to be
-#'        used in the model. The \code{gaussian} family accepts \code{identity}
-#'        link function. The \code{binomial} family accepts \code{logit} and
-#'        \code{probit} link function. The \code{poisson} family accepts
-#'        \code{log} link function.
+#'        used in the model. The \code{gaussian} family accepts the
+#'        \code{identity} link function. The \code{binomial} family accepts the
+#'        links \code{logit} and \code{probit}. The \code{poisson} family
+#'        accepts the \code{log} link function.
 #' @param data  Data frame.
 #' @param id  Vector that identifies the subjects or clusters (\code{NULL} by
 #'        default).
@@ -107,6 +107,12 @@
 #'         \emph{Science Journal of Applied Mathematics and Statistics},
 #'         2, 20–25,
 #'         \doi{10.11648/j.sjams.20140201.13}.\cr
+#'   \item Ishii, R., Ohigashi, T., Maruo, K., and Gosho, M. (2024).
+#'         geessbin: an R package for analyzing small-sample binary data using
+#'         modified generalized estimating equations with bias-adjusted
+#'         covariance estimators.
+#'         \emph{BMC Medical Research Methodology}, 24, 277,
+#'         \doi{10.1186/s12874-024-02368-2}. \cr
 #'   \item Kauermann, G. and Carroll, R. J. (2001). A note on the efficiency of
 #'         sandwich covariance matrix estimation.
 #'         \emph{Journal of the American Statistical Association},
@@ -158,19 +164,23 @@
 #' }
 #'
 #' @examples
-#' data(wheeze)
+#' library(geess)
+#' data(epilepsy)
 #'
-#' # analysis of PGEE method with Morel et al. covariance estimator
-#' res <- geessbin(formula = Wheeze ~ City + factor(Age), data = wheeze, id = ID,
-#'                 corstr = "ar1", repeated = Age, beta.method = "PGEE",
-#'                 SE.method = "MB")
+#' # analysis of longitudinal count data using PGEE method with Morel et al. covariance estimator
+#' res <- geess(formula = Count ~ Drug + Base + factor(Time),
+#'              family = poisson, data = epilepsy,
+#'              id = ID, repeated = Time, corstr = "ar1",
+#'              beta.method = "PGEE", SE.method = "MB")
+#'
+#' print(res)
 #'
 #' # hypothesis tests for regression coefficients
 #' summary(res)
 #'
 #' @importFrom MASS ginv
 #' @importFrom stats model.matrix model.response model.frame model.extract
-#' @importFrom stats glm.fit cov pnorm qnorm binomial
+#' @importFrom stats glm.fit cov pnorm qnorm binomial gaussian
 #'
 #' @export
 geess <- function (formula, family = gaussian, data = parent.frame(),
@@ -210,6 +220,11 @@ geess <- function (formula, family = gaussian, data = parent.frame(),
                  gaussian = function (mu) rep(0, length(mu)),
                  binomial = function (mu) 1 - 2 * mu,
                  poisson  = function (mu) rep(1, length(mu)))
+
+  a3fun <- switch(family$family,
+                  gaussian = function (x) rep(0, length(x)),
+                  binomial = function (x) x * (1 - x) * (1 - 2 * x),
+                  poisson  = function (x) x)
 
   if (is.null(id) & !is.null(repeated)) {
     stop("'id' must be specified when 'repeated' is not NULL")
@@ -253,8 +268,12 @@ geess <- function (formula, family = gaussian, data = parent.frame(),
   X <- model.matrix(Terms, dat)
   p <- ncol(X)
 
-  if (!is.numeric(y) | !setequal(unique(y), 0:1)) {
-    stop("outcome vector must be numeric and take values in {0, 1}")
+  if (!is.numeric(y)) {
+    stop("outcome vector must be numeric")
+  }
+
+  if (family$family == "binomial" & !setequal(unique(y), 0:1)) {
+    stop("outcome vector must take values in {0, 1}")
   }
 
   for(v in c("corstr", "beta.method", "SE.method")){
@@ -313,10 +332,9 @@ geess <- function (formula, family = gaussian, data = parent.frame(),
       del <- 100
       nitr <- 0
       while (del > 1e-5) {
-        mu <- 1 / (1 + exp(-X %*% b))
-        I <- t(c(mu * (1 - mu)) * X) %*% X
-        U <- t(X) %*%
-          (y - mu + diag(X %*% ginv(I) %*% t(X)) * mu * (1 - mu) * (0.5 - mu))
+        mu <- family$linkinv(X %*% b)
+        I <- t(c(family$variance(mu)) * X) %*% X
+        U <- t(X) %*% (y - mu + diag(X %*% ginv(I) %*% t(X)) * a3fun(mu) * 0.5)
         del <- max(abs(U))
         if (del > 1e-5) b <- b + ginv(I) %*% U
 

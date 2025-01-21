@@ -26,10 +26,10 @@ fitted (see documentation of \code{lm} and
 \code{formula} for details).}
 
 \item{family}{Description of the error distribution and link function to be
-used in the model. The \code{gaussian} family accepts \code{identity}
-link function. The \code{binomial} family accepts \code{logit} and
-\code{probit} link function. The \code{poisson} family accepts
-\code{log} link function.}
+used in the model. The \code{gaussian} family accepts the
+\code{identity} link function. The \code{binomial} family accepts the
+links \code{logit} and \code{probit}. The \code{poisson} family
+accepts the \code{log} link function.}
 
 \item{data}{Data frame.}
 
@@ -77,7 +77,7 @@ modified generalized estimating equations with bias-adjusted covariance
 estimators. Generic function \code{summary} provides details of the results.
 }
 \description{
-\code{geess} is an extension of \code{geessbin} package.
+\code{geess} is an extension of \code{geessbin} package (Ishii et al., 2024).
 \code{geess} analyzes small-sample clustered or longitudinal data using
 modified generalized estimating equations (GEE) with bias-adjusted covariance
 estimator. This function provides any combination of three GEE methods
@@ -114,16 +114,20 @@ Details of \code{SE.method} are as follows:
 \item "FZ" is the Fan et al. estimator (Fan et al., 2013)
 }
 
-Descriptions and performances of some of the above methods can be found in
-Gosho et al. (2023).
+Descriptions and performances of some of the above methods in the case of
+binary outcomes can be found in Gosho et al. (2023).
 }
 \examples{
-data(wheeze)
+library(geess)
+data(epilepsy)
 
-# analysis of PGEE method with Morel et al. covariance estimator
-res <- geessbin(formula = Wheeze ~ City + factor(Age), data = wheeze, id = ID,
-                corstr = "ar1", repeated = Age, beta.method = "PGEE",
-                SE.method = "MB")
+# analysis of longitudinal count data using PGEE method with Morel et al. covariance estimator
+res <- geess(formula = Count ~ Drug + Base + factor(Time),
+             family = poisson, data = epilepsy,
+             id = ID, repeated = Time, corstr = "ar1",
+             beta.method = "PGEE", SE.method = "MB")
+
+print(res)
 
 # hypothesis tests for regression coefficients
 summary(res)
@@ -156,6 +160,12 @@ summary(res)
         \emph{Science Journal of Applied Mathematics and Statistics},
         2, 20–25,
         \doi{10.11648/j.sjams.20140201.13}.\cr
+  \item Ishii, R., Ohigashi, T., Maruo, K., and Gosho, M. (2024).
+        geessbin: an R package for analyzing small-sample binary data using
+        modified generalized estimating equations with bias-adjusted
+        covariance estimators.
+        \emph{BMC Medical Research Methodology}, 24, 277,
+        \doi{10.1186/s12874-024-02368-2}. \cr
   \item Kauermann, G. and Carroll, R. J. (2001). A note on the efficiency of
         sandwich covariance matrix estimation.
         \emph{Journal of the American Statistical Association},
