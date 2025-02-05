@@ -210,6 +210,27 @@ geess <- function (formula, family = gaussian, data = parent.frame(),
     stop("'family' not recognized")
   }
 
+  dists <- c("gaussian", "binomial", "poisson")
+  if (is.na(match(family$family, dists))) {
+    stop(
+      paste(c("'family' must be specified from the following list:", "\n",
+              paste(paste0("\"", dists, "\""), collapse = ", ")))
+    )
+  }
+
+  if (family$family == "gaussian" & family$link != "identity") {
+    stop("The gaussian family accepts the identity link function.")
+  }
+
+  if (family$family == "binomial" &
+      family$link != "logit" & family$link != "probit") {
+    stop("The binomial family accepts the links logit and probit.")
+  }
+
+  if (family$family == "poisson" & family$link != "log") {
+    stop("The poisson family accepts the log link function.")
+  }
+
   gfun <- switch(family$link,
                  identity = function (mu) rep(0, length(mu)),
                  logit    = function (mu) 1 - 2 * mu,
@@ -220,11 +241,6 @@ geess <- function (formula, family = gaussian, data = parent.frame(),
                  gaussian = function (mu) rep(0, length(mu)),
                  binomial = function (mu) 1 - 2 * mu,
                  poisson  = function (mu) rep(1, length(mu)))
-
-  a3fun <- switch(family$family,
-                  gaussian = function (x) rep(0, length(x)),
-                  binomial = function (x) x * (1 - x) * (1 - 2 * x),
-                  poisson  = function (x) x)
 
   if (is.null(id) & !is.null(repeated)) {
     stop("'id' must be specified when 'repeated' is not NULL")
@@ -326,15 +342,24 @@ geess <- function (formula, family = gaussian, data = parent.frame(),
     stop("'conf.level' must be in interval (0,1)")
   }
 
+  if (beta.method != "GEE" & family$family == "gaussian") {
+    message("GEE, BCGEE, and PGEE are equivalent for gaussian")
+  }
+
   if (is.null(b)) {
     if (beta.method == "PGEE") {
       b <- numeric(p)
       del <- 100
       nitr <- 0
       while (del > 1e-5) {
-        mu <- family$linkinv(X %*% b)
-        I <- t(c(family$variance(mu)) * X) %*% X
-        U <- t(X) %*% (y - mu + diag(X %*% ginv(I) %*% t(X)) * a3fun(mu) * 0.5)
+        eta <- c(X %*% b)
+        mu <- family$linkinv(eta)
+        nu <- family$variance(mu)
+        D <- family$mu.eta(eta) * X
+        I <- t(D) %*% (D / nu)
+
+        cvec <- (gfun(mu) / family$mu.eta(eta) - 0.5 * pfun(mu) / nu)
+        U <- t(D / nu) %*% (y - mu + diag(D %*% ginv(I) %*% t(D)) * cvec)
         del <- max(abs(U))
         if (del > 1e-5) b <- b + ginv(I) %*% U
 
@@ -758,30 +783,18 @@ print.geess <- function(x, digits = 3, ...) {
 summary.geess <- function(object, ...){
   b <- object$coefficients
   se <- sqrt(diag(object$covb))
-  coef <- matrix(c(b, se, b/se, pnorm(-abs(b/se), 0, 1) * 2), ncol = 4)
-  colnames(coef) <- c("Estimate", "Std.err", "Z", "Pr(>|Z|)")
+  q <- qnorm(1 - (1 - object$conf.level) / 2)
+
+  coef <- matrix(c(b, se, b - q * se, b + q * se, b/se,
+                   pnorm(-abs(b/se), 0, 1) * 2), ncol = 6)
+  colnames(coef) <- c("Estimate", "Std.err", "Lower Limit", "Upper Limit",
+                      "Z", "Pr(>|Z|)")
   rownames(coef) <- names(b)
-
-  b0 <- b[toupper(names(b)) != "(INTERCEPT)"]
-  if (length(b0) > 0) {
-    se0 <- se[toupper(names(b)) != "(INTERCEPT)"]
-
-    OR <- exp(b0)
-    q <- qnorm(1 - (1 - object$conf.level) / 2)
-    OR <- cbind(matrix(exp(b0), ncol = 1),
-                matrix(exp(b0 - q * se0), ncol = 1),
-                matrix(exp(b0 + q * se0), ncol = 1))
-    colnames(OR) <- c("Exp(coef)", "Lower Limit", "Upper Limit")
-    rownames(OR) <- names(b0)
-  } else {
-    OR <- NULL
-  }
 
   structure(class = "summary.geess",
             list(call = object$call,
                  family = object$family,
                  coefficients = coef,
-                 OR = OR,
                  scale = object$scale,
                  wcorr = object$wcorr,
                  iterations = object$iterations,
@@ -805,10 +818,16 @@ print.summary.geess <- function(x, digits = 3, ...) {
   cat("\nCoefficients:\n")
   print(x$coefficients, digits = digits)
 
-  if (x$family$family != "gaussian"){
+  if (x$family$family != "gaussian" & x$family$link != "probit"){
+    coef <- x$coefficients[, c("Estimate", "Lower Limit", "Upper Limit")]
+    coef <- coef[toupper(row.names(coef)) != "(INTERCEPT)", ]
+    colnames(coef) <- c("Exp(coef)", "Lower Limit", "Upper Limit")
+
     cat("\nExp(coef) with", paste0(x$conf.level * 100, "%"),
         "Confidence Intervals", ":\n")
-    print(x$OR, digits = digits)
+    print(exp(coef), digits = digits)
+  } else {
+
   }
 
   cat("\nEstimated Scale Parameter: ", format(round(x$scale, digits)))
