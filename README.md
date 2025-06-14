@@ -4,6 +4,7 @@
 # geess
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 The geess function analyzes small-sample clustered or longitudinal data
@@ -30,74 +31,82 @@ This is a basic example:
 
 ``` r
 library(geess)
-data(dental)
+library(MASS)
 
-# analysis of longitudinal count data using BCGEE method with Morel et al. covariance estimator
-res <- 
-  geess(formula = Distance ~ Sex + Time, family = gaussian, data = dental, 
-        id = ID, repeated = Time, corstr = "unstructured", 
-        beta.method = "BCGEE", SE.method = "MB")
-#> GEE, BCGEE, and PGEE are equivalent for gaussian
+# analysis of longitudinal count data usinBCg GEE method with Morel et al. covariance estimator
+res <- geess(formula = y ~ trt + period + lbase + lage,
+             family = poisson, data = epil, id = subject,
+             repeated = period, corstr = "unstructured",
+             beta.method = "BCGEE", SE.method = "MB")
 
 print(res)
 #> Call:
-#> geess(formula = Distance ~ Sex + Time, family = gaussian, data = dental, 
-#>     id = ID, corstr = "unstructured", repeated = Time, beta.method = "BCGEE", 
-#>     SE.method = "MB")
+#> geess(formula = y ~ trt + period + lbase + lage, family = poisson, 
+#>     data = epil, id = subject, corstr = "unstructured", repeated = period, 
+#>     beta.method = "BCGEE", SE.method = "MB")
 #> 
 #> Model:  
-#>  Family:  gaussian 
-#>  Link:  identity 
+#>  Family:  poisson 
+#>  Link:  log 
 #>  Correlation Structure:  unstructured 
 #> 
 #> Estimation Method:  
 #>  Regression Coefficients:  BCGEE 
 #>  Standard Errors:  MB 
 #> 
-#> Number of observations:  108 
-#> Number of clusters:  27 
+#> Number of observations:  236 
+#> Number of clusters:  59 
 #> Maximum cluster size:  4 
 #> 
 #> Coefficients:
-#> (Intercept)         Sex        Time 
-#>       19.47        2.29        1.31 
+#>  (Intercept) trtprogabide       period        lbase         lage 
+#>       1.8435      -0.0141      -0.0549       1.2397       0.6058 
 #> 
-#> Estimated Scale Parameter:  5.17
-#> Number of Iterations:  6 
+#> Estimated Scale Parameter:  4.84
+#> Number of Iterations:  7 
 #> 
 #> Working Correlation:
 #>       1     2     3     4
-#> 1 1.000 0.567 0.776 0.512
-#> 2 0.567 1.000 0.585 0.627
-#> 3 0.776 0.585 1.000 0.851
-#> 4 0.512 0.627 0.851 1.000
+#> 1 1.000 0.480 0.421 0.259
+#> 2 0.480 1.000 0.624 0.331
+#> 3 0.421 0.624 1.000 0.453
+#> 4 0.259 0.331 0.453 1.000
 #> 
 #> Convergence status:  Converged
 
 # hypothesis tests for regression coefficients
 summary(res)
 #> Call:
-#> geess(formula = Distance ~ Sex + Time, family = gaussian, data = dental, 
-#>     id = ID, corstr = "unstructured", repeated = Time, beta.method = "BCGEE", 
-#>     SE.method = "MB")
+#> geess(formula = y ~ trt + period + lbase + lage, family = poisson, 
+#>     data = epil, id = subject, corstr = "unstructured", repeated = period, 
+#>     beta.method = "BCGEE", SE.method = "MB")
 #> 
 #> Correlation Structure:  unstructured 
 #> Estimation Method for Regression Coefficients:  BCGEE 
 #> Estimation Method for Standard Errors:  MB 
 #> 
 #> Coefficients:
-#>             Estimate Std.err Lower Limit Upper Limit     Z  Pr(>|Z|)
-#> (Intercept)    19.47   0.707      18.084       20.86 27.53 8.34e-167
-#> Sex             2.29   0.820       0.686        3.90  2.80  5.16e-03
-#> Time            1.31   0.155       1.009        1.62  8.49  2.09e-17
+#>              Estimate Std.err Lower Limit Upper Limit       Z Pr(>|Z|)
+#> (Intercept)    1.8435  0.1531      1.5435      2.1435 12.0437 2.09e-33
+#> trtprogabide  -0.0141  0.1912     -0.3888      0.3607 -0.0736 9.41e-01
+#> period        -0.0549  0.0411     -0.1355      0.0257 -1.3345 1.82e-01
+#> lbase          1.2397  0.1611      0.9238      1.5555  7.6927 1.44e-14
+#> lage           0.6058  0.3157     -0.0129      1.2246  1.9191 5.50e-02
 #> 
-#> Estimated Scale Parameter:  5.17
-#> Number of Iterations:  6 
+#> Exp(coef) with 95% Confidence Intervals :
+#>              Exp(coef) Lower Limit Upper Limit
+#> trtprogabide     0.986       0.678        1.43
+#> period           0.947       0.873        1.03
+#> lbase            3.454       2.519        4.74
+#> lage             1.833       0.987        3.40
+#> 
+#> Estimated Scale Parameter:  4.84
+#> Number of Iterations:  7 
 #> 
 #> Working Correlation:
 #>       1     2     3     4
-#> 1 1.000 0.567 0.776 0.512
-#> 2 0.567 1.000 0.585 0.627
-#> 3 0.776 0.585 1.000 0.851
-#> 4 0.512 0.627 0.851 1.000
+#> 1 1.000 0.480 0.421 0.259
+#> 2 0.480 1.000 0.624 0.331
+#> 3 0.421 0.624 1.000 0.453
+#> 4 0.259 0.331 0.453 1.000
 ```

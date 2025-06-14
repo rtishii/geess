@@ -119,14 +119,13 @@ binary outcomes can be found in Gosho et al. (2023).
 }
 \examples{
 library(geess)
-data(dental)
+library(MASS)
 
-# analysis of longitudinal continuous data using GEE method with Morel et al. covariance estimator
-res <- geess(formula = Distance ~ Time + Sex,
-             family = gaussian, data = dental,
-             id = ID, repeated = Time, corstr = "unstructured",
-             beta.method = "GEE", SE.method = "SA")
-
+# analysis of longitudinal count data usinBCg GEE method with Morel et al. covariance estimator
+res <- geess(formula = y ~ trt + period + lbase + lage,
+             family = poisson, data = epil, id = subject,
+             repeated = period, corstr = "unstructured",
+             beta.method = "BCGEE", SE.method = "MB")
 print(res)
 
 # hypothesis tests for regression coefficients
