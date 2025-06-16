@@ -1,0 +1,63 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# geess
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The geess function analyzes small-sample clustered or longitudinal data using
+modified generalized estimating equations (GEE) with bias-adjusted covariance
+estimator. This is an extension of geessbin function 
+[(Ishii et al., 2024)](https://doi.org/10.1186/s12874-024-02368-2). 
+The geess function provides any combination of three GEE methods 
+(conventional and two modified GEE methods) and 12 covariance estimators
+(unadjusted and 11 bias-adjusted estimators).
+
+## Installation
+
+You can install the released version of geess from 
+[CRAN](https://CRAN.R-project.org) with:
+
+``` r
+install.packages("geess")
+```
+
+And the development version from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("rtishii/geess")
+```
+
+## Example
+
+This is a basic example:
+
+```{r example}
+library(geess)
+library(MASS)
+
+# analysis of longitudinal count data usinBCg GEE method with Morel et al. covariance estimator
+res <- geess(formula = y ~ trt + period + lbase + lage,
+             family = poisson, data = epil, id = subject,
+             repeated = period, corstr = "unstructured",
+             beta.method = "BCGEE", SE.method = "MB")
+
+print(res)
+
+# hypothesis tests for regression coefficients
+summary(res)
+```
