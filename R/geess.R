@@ -1,4 +1,4 @@
-#' Modified Generalized Estimating Equations for Small-sample data
+#' Modified Generalized Estimating Equations for Small-Sample Data
 #'
 #' \code{geess} is an extension of \code{geessbin} package (Ishii et al., 2024).
 #' \code{geess} analyzes small-sample clustered or longitudinal data using

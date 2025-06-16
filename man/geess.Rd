@@ -2,7 +2,7 @@
 % Please edit documentation in R/geess.R
 \name{geess}
 \alias{geess}
-\title{Modified Generalized Estimating Equations for Small-sample data}
+\title{Modified Generalized Estimating Equations for Small-Sample Data}
 \usage{
 geess(
   formula,
