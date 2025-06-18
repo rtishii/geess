@@ -1,15 +1,15 @@
 Package: geess
 Type: Package
 Title: Modified Generalized Estimating Equations for Small-Sample Data
-Version: 0.1.1
+Version: 0.1.2
 Authors@R: c(person("Ryota", "Ishii", email = "r.ishii0808@gmail.com",
                   role = c("aut", "cre")),
                  person("Kazushi", "Maruo", role = "ctb"),
                  person("Masahiko", "Gosho", role = "ctb"))
 Maintainer: Ryota Ishii <r.ishii0808@gmail.com>
-Description: Analyze small-sample clustered or longitudinal data using modified 
+Description: Analyze small-sample clustered or longitudinal data using modified
     generalized estimating equations with bias-adjusted covariance estimator. 
-    The package provides any combination of three modified generalized 
+    The package provides any combination of three modified generalized
     estimating equations and 11 bias-adjusted covariance estimators.
 Depends: R (>= 4.5.0)
 Imports: MASS (>= 7.3-45)

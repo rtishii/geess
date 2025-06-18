@@ -68,7 +68,7 @@ print(res)
 #>  (Intercept) trtprogabide       period        lbase         lage 
 #>       1.8435      -0.0141      -0.0549       1.2397       0.6058 
 #> 
-#> Estimated Scale Parameter:  4.84
+#> Estimated Scale Parameter:  4.836
 #> Number of Iterations:  7 
 #> 
 #> Working Correlation:
@@ -106,7 +106,7 @@ summary(res)
 #> lbase            3.454       2.519        4.74
 #> lage             1.833       0.987        3.40
 #> 
-#> Estimated Scale Parameter:  4.84
+#> Estimated Scale Parameter:  4.836
 #> Number of Iterations:  7 
 #> 
 #> Working Correlation:

@@ -762,7 +762,7 @@ calc_mat <- function(X, y, b, R, phi, family, offset) {
 
 #' @export
 print.geess <- function(x, digits = 3, ...) {
-  if(is.null(digits)) digits <- options()$digits else options(digits = digits)
+  if(is.null(digits)) digits <- options()$digits
 
   cat("Call:\n")
   dput(x$call)
@@ -825,8 +825,8 @@ summary.geess <- function(object, ...){
 
 #' @export
 print.summary.geess <- function(x, digits = 3, ...) {
-  if(is.null(digits)) digits <- options()$digits else options(digits =
-                                                                digits)
+  if(is.null(digits)) digits <- options()$digits
+
   cat("Call:\n")
   dput(x$call)
 
