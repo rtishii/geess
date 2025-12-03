@@ -180,6 +180,7 @@
 #' @importFrom MASS ginv
 #' @importFrom stats model.matrix model.response model.frame model.extract model.offset
 #' @importFrom stats glm.fit cov pnorm qnorm binomial gaussian
+#' @importFrom stats .getXlevels formula delete.response terms na.pass
 #'
 #' @export
 geess <- function (formula, family = gaussian, data = parent.frame(),
@@ -712,7 +713,7 @@ geess <- function (formula, family = gaussian, data = parent.frame(),
   if (!exists("R")) R <- matrix(NA, n, n)
 
   lin <- c(X %*% b + offset)
-  mu <- c(1 / (1 + exp(-lin)))
+  mu <- family$linkinv(lin)
   resid <- c(y - mu)
 
   b <- as.vector(b)
@@ -745,7 +746,8 @@ geess <- function (formula, family = gaussian, data = parent.frame(),
                  convergence = conv,
                  conf.level = conf.level,
                  model.matrix = X,
-                 data = data))
+                 data = data,
+                 xlevels = .getXlevels(Terms, dat)))
 }
 
 
@@ -888,4 +890,53 @@ model.matrix.geess <- function (object, ...) {
 #' @export
 fitted.geess <- function (object, ...) {
   return(object$fitted.values)
+}
+
+#' @export
+predict.geess <- function(object, newdata = NULL,
+                          type = c("response", "link"),
+                          se.fit = FALSE, ...) {
+
+  if (!inherits(object, "geess")) {
+    stop("'object' must be an object of class 'geess'")
+  }
+
+  type <- match.arg(type)
+  f <- formula(object)
+  Terms <- delete.response(terms(f))
+  environment(Terms) <- environment(f)
+  family <- object$family
+
+  if (is.null(newdata)) {
+    if (is.null(object$call$data)) {
+      stop("No original data were stored; 'newdata' must be provided.")
+    }
+    df <- eval(object$call$data, envir = environment(f))
+    dat <- model.frame(Terms, df, na.action = na.pass)
+  } else {
+    dat <- model.frame(Terms, newdata, na.action = na.pass,
+                       xlev = object$xlevels)
+  }
+
+  X <- model.matrix(Terms, dat)
+  lin <- drop(X %*% object$coefficients)
+
+  if (type == "response") {
+    fit <- family$linkinv(lin)
+  } else {
+    fit <- lin
+  }
+
+  if (!se.fit) {
+    return(as.vector(fit))
+  }
+
+  if (se.fit) {
+    vc <- object$covb
+    se <- sqrt(rowSums((X %*% vc) * X))
+
+    if (type == "response") se <- family$mu.eta(lin) * se
+
+    return(list(fit = as.vector(fit), se.fit = as.vector(se)))
+  }
 }
