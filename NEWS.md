@@ -14,3 +14,7 @@
 
 * Revised geess function
 * Added predict.geess function
+
+# geess 1.0.1
+
+* Revised sqrtmat function
